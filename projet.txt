@@ -11,3 +11,13 @@ etc
 2 - Puissance 4 (2 prochaines séances)
 
 Respect des règles + Anticipation de coups par l'IA (minimum 1)
+
+
+diff(_,[]).
+diff(P1,[P2|Q]):- P1\==P2, diff(P1,Q).
+
+unique([]).
+unique([X|Xs]) :- \+ memberchk(X, Xs), unique(Xs).
+
+indice0([]).
+indice0([P|Q]):- potion(P), unique([P|Q]), indice0(Q).
