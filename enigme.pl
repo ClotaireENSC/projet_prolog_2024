@@ -34,6 +34,8 @@
 % VO : vin d^orties
 % FV : flammes violettes
 
+% Pour voir la solution, écrire : solution(L).
+
 
 
 % Résolution de l^énigme des potions
@@ -46,8 +48,8 @@ potion(poison3).
 potion(vin_ortie1).
 potion(vin_ortie2).
 
-type(flamme_violette,potion_flamme_noire).
-type(flamme_noire,potion_flamme_violette).
+type(flamme_noire,potion_flamme_noire).
+type(flamme_violette,potion_flamme_violette).
 type(poison1,poison).
 type(poison2,poison).
 type(poison3,poison).
