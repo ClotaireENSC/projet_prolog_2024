@@ -115,3 +115,4 @@ transpose(Matrix, [Row|Rest]) :-
     transpose(Tails, Rest).
 
 head_tail([H|T], H, T).
+
