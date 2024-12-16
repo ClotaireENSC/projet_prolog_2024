@@ -1,3 +1,5 @@
+% Résolution de l^énigme des potions de Harry Potter 1
+
 % Devant est le danger, le salut est derrière.
 % Deux sauront parmi nous conduire à la lumière,
 % L’une d’entre les sept en avant te protège,
@@ -15,11 +17,13 @@
 
 % Le troisième : elles sont de tailles inégales,
 % Ni naine ni géante en son sein n’est fatale.
+% --> Règle inutile pour la disposition, sert seulement aux sorciers
 
 % Quatre enfin : les deuxièmes, à gauche comme à droite,
 % Sont jumelles de goût, mais d’aspect disparates.
 
-% Indice ajouté (5) : La naine est plus a gauche que la géante
+% Indice ajouté (5) : La potion des flammes violettes est à droite de celle des flammes noires
+% Cet indice est donné au lecteur via le dialogue entre harry et hermione (cette dernière le dit)
 
 % Indice implicite (0) : toutes les potions sont uniques
 
@@ -58,7 +62,6 @@ flamme(X):- X = flamme_noire; X = flamme_violette.
 % rule 0 : Toutes les potions sont uniques
 indice0(L):- permutation([flamme_noire, flamme_violette, poison1, vin_ortie1, vin_ortie2, poison2, poison3],L).
 
-
 % rule 1 : Les poisons sont a gauche des vins
 pas_de_poison_dans([]).
 pas_de_poison_dans([P|Q]):- \+ poison(P), pas_de_poison_dans(Q).
@@ -68,17 +71,25 @@ indice1([P|Q]):- potion(P), ((vin(P), pas_de_poison_dans(Q), indice1(Q)); (\+ vi
 % rule 2 : Les extremes sont differents et pas solution pour feu violet
 indice2([P1,_,_,_,_,_,P7]):- potion(P1), potion(P7), P1 \== P7, P1 \== flamme_violette, P7 \== flamme_violette.
 
+% rule 3 -> inutile
+
 % rule 4 : les deuxiemes extremes ont le meme gout 
 meme_gout(X,Y):- (vin(X), vin(Y)); (poison(X), poison(Y)); (flamme(X), flamme(Y)).
 indice4([_,P2,_,_,_,P6,_]):- potion(P2), potion(P6), P2\== P6, meme_gout(P2,P6).
+
+% rule 5 : La potion des flammes violettes est à droite de celle des flammes noires
+indice5([P1,P2,P3,P4,P5,P6,P7]):-
+    nth1(Id_FN, [P1,P2,P3,P4,P5,P6,P7], flamme_noire),
+    nth1(Id_FV, [P1,P2,P3,P4,P5,P6,P7], flamme_violette),
+    Id_FN < Id_FV.
 
 dispositions([P1,P2,P3,P4,P5,P6,P7]):-
     indice0([P1,P2,P3,P4,P5,P6,P7]),
     indice1([P1,P2,P3,P4,P5,P6,P7]),
     indice2([P1,P2,P3,P4,P5,P6,P7]),
 %    indice3([P1,P2,P3,P4,P5,P6,P7]),
-    indice4([P1,P2,P3,P4,P5,P6,P7]).
-%    indice5([P1,P2,P3,P4,P5,P6,P7])
+    indice4([P1,P2,P3,P4,P5,P6,P7]),
+    indice5([P1,P2,P3,P4,P5,P6,P7]).
 
 solution([T1,T2,T3,T4,T5,T6,T7]):-
     type(P1,T1),
