@@ -56,17 +56,23 @@ replace([H|T], N, X, [H|R]) :-
 %% MOUVEMENT IA %%
 %%%%%%%%%%%%%%%%%%
 
-coup_gagnant(Grid, Coups) :-
+coup_gagnant(Grid, Player, Coups) :-
     findall(Col, (between(1, 7, Col),
-                  play_move(Grid, Col, x, NewGrid),
+                  play_move(Grid, Col, Player, NewGrid),
                   check_victory(NewGrid, x)),
             Coups).   
 
 ai_move(Grid, NewGrid) :-
-    coup_gagnant(Grid, CoupsGagnants),
+    coup_gagnant(Grid, o, CoupsGagnantsO),
+    (        
+        CoupsGagnantsO \= [] ->
+        random_member(Col, CoupsGagnantsO),
+        play_move(Grid, Col, o, NewGrid)
+    );
+    coup_gagnant(Grid, x, CoupsGagnantsX),
     (
-        CoupsGagnants \= [] ->
-        random_member(Col, CoupsGagnants),
+        CoupsGagnantsX \= [] ->
+        random_member(Col, CoupsGagnantsX),
         play_move(Grid, Col, o, NewGrid);
         random_between(1, 7, Col),
         play_move(Grid, Col, o, NewGrid);
@@ -93,18 +99,45 @@ vertical_victory(Grid, Player) :-
     four_in_a_row(Row, Player).
 
 diagonal_victory(Grid, Player) :-
-    diagonal(Grid, Diagonal),
-    four_in_a_row(Diagonal, Player);
-    reverse(Grid, Reversed),
-    diagonal(Reversed, DiagonalReversed),
-    four_in_a_row(DiagonalReversed, Player).
+    diagonals(Grid, Diagonals),
+    member(Diagonal, Diagonals),
+    four_in_a_row(Diagonal, Player).
 
 four_in_a_row([Player, Player, Player, Player|_], Player).
 four_in_a_row([_, H|T], Player) :-
     four_in_a_row([H|T], Player).
 
-diagonal(Grid, Diagonal) :-
-    findall(E, (nth1(Index, Grid, Row), nth1(Index, Row, E)), Diagonal).
+diagonals(Grid, Diagonals) :-
+    find_diagonals(Grid, Diagonals).
+
+find_diagonals(Grid, Diagonals) :-
+    findall(Diagonal, (between(0, 3, ColIndex), extract_diagonal(Grid, 0, ColIndex, Diagonal)), Diagonals1),
+    transpose(Grid, TransposedGrid),
+    findall(Diagonal, (between(1, 2, ColIndex), extract_diagonal(TransposedGrid, 0, ColIndex, Diagonal)), Diagonals2),
+    append(Diagonals1, Diagonals2, Diagonals11),
+
+    reverse_matrix_by_columns(Grid,RevGrid),
+
+    findall(Diagonal, (between(0, 3, ColIndex), extract_diagonal(RevGrid, 0, ColIndex, Diagonal)), Diagonals3),
+    transpose(RevGrid, TransposedRevGrid),
+    findall(Diagonal, (between(1, 2, ColIndex), extract_diagonal(TransposedRevGrid, 0, ColIndex, Diagonal)), Diagonals4),
+    append(Diagonals3, Diagonals4, Diagonals12),
+
+    append(Diagonals11,Diagonals12, Diagonals).
+
+extract_diagonal([], _, _, []).
+extract_diagonal([Row|Rest], RowIndex, ColIndex, [Elem|RestDiag]) :-
+    (   nth0(ColIndex, Row, Elem)
+    ->  NextRowIndex is RowIndex + 1,
+        NextColIndex is ColIndex + 1,
+        extract_diagonal(Rest, NextRowIndex, NextColIndex, RestDiag)
+    ;   RestDiag = []
+    ).
+
+reverse_matrix_by_columns([], []).
+reverse_matrix_by_columns([Row|Rest], [ReversedRow|RestReversed]) :-
+    reverse(Row, ReversedRow),    % Inverse chaque ligne
+    reverse_matrix_by_columns(Rest, RestReversed).
 
 transpose([[]|_], []).
 transpose(Matrix, [Row|Rest]) :-
