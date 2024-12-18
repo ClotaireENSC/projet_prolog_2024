@@ -11,12 +11,25 @@ initial_grid([ [e, e, e, e, e, e, e],
 
 print_grid([]).
 print_grid([P|Q]) :-
-    print_grid(Q), nl,
-    write(P).
+    print_grid(Q),
+    nl,
+    print_row(P).
 
-%%%%%%%%%%%%%%%%%%%%%%
-%% MOUVEMENT JOUEUR %%
-%%%%%%%%%%%%%%%%%%%%%%
+print_row([]).
+print_row([e|T]) :-
+    write('. '),
+    print_row(T).
+print_row([x|T]) :-
+    write('X '),
+    print_row(T).
+print_row([o|T]) :-
+    write('O '),
+    print_row(T).
+
+
+%%%%%%%%%%%%%%%%
+%% MOUVEMENTS %%
+%%%%%%%%%%%%%%%%
 
 play_move(Grid, Col, Player, NewGrid) :-
     Col > 0, Col < 8, 
@@ -43,37 +56,21 @@ replace([H|T], N, X, [H|R]) :-
 %% MOUVEMENT IA %%
 %%%%%%%%%%%%%%%%%%
 
+coup_gagnant(Grid, Coups) :-
+    findall(Col, (between(1, 7, Col),
+                  play_move(Grid, Col, x, NewGrid),
+                  check_victory(NewGrid, x)),
+            Coups).   
+
 ai_move(Grid, NewGrid) :-
-    random_between(1, 7, Col),
-    play_move(Grid, Col, o, NewGrid).
-
-%%%%%%%%%%%%%%%%%%%
-%% BOUCLE DE JEU %%
-%%%%%%%%%%%%%%%%%%%
-
-start :-
-    initial_grid(Grid),
-    play_game(Grid).
-
-play_game(Grid) :-
-    print_grid(Grid),
-    write('\n\nX : Vous | O : IA\n'),
-    write('\nEntrez un coup (colonne 1-7) : '),
-    read(Col),
+    coup_gagnant(Grid, CoupsGagnants),
     (
-        play_move(Grid, Col, x, NewGrid),
-        (   check_victory(NewGrid, x)
-        ->  print_grid(NewGrid),  % Affichage de la grille après le coup avant la victoire
-            write('\n\nX gagne !\n\n')
-        ;   ai_move(NewGrid, NewGrid1),
-            (   check_victory(NewGrid1, o)
-            ->  print_grid(NewGrid1),  % Affichage de la grille après le coup avant la victoire
-                write('\n\nO gagne !\n\n')
-            ;   play_game(NewGrid1)
-            )
-        )
-    ;   write('Coup invalide, essayez de nouveau.\n'),
-        play_game(Grid)
+        CoupsGagnants \= [] ->
+        random_member(Col, CoupsGagnants),
+        play_move(Grid, Col, o, NewGrid);
+        random_between(1, 7, Col),
+        play_move(Grid, Col, o, NewGrid);
+        ai_move(Grid, NewGrid)
     ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,3 +113,46 @@ transpose(Matrix, [Row|Rest]) :-
 
 head_tail([H|T], H, T).
 
+%%%%%%%%%%%%%
+%% EGALITE %%
+%%%%%%%%%%%%%
+
+egalite(Grid) :-
+    \+ (member(Row, Grid), member(e, Row)),
+    \+ check_victory(Grid, x),
+    \+ check_victory(Grid, o).
+
+%%%%%%%%%%%%%%%%%%%
+%% BOUCLE DE JEU %%
+%%%%%%%%%%%%%%%%%%%
+
+start :-
+    initial_grid(Grid),
+    play_game(Grid).
+
+play_game(Grid) :-
+    print_grid(Grid),
+    write('\n\nX : Vous | O : IA\n'),
+    write('\nEntrez un coup (colonne 1-7) : '),
+    read(Col),
+    (
+        play_move(Grid, Col, x, NewGrid),
+        (   check_victory(NewGrid, x)
+        ->  print_grid(NewGrid),
+            write('\n\nX gagne !\n\n')
+        ;   egalite(NewGrid) 
+        -> print_grid(NewGrid),
+           write('\n\nEgalité !\n\n');
+        ai_move(NewGrid, NewGrid1),
+            (   check_victory(NewGrid1, o)
+            ->  print_grid(NewGrid1),
+                write('\n\nO gagne !\n\n')
+            ;   egalite(NewGrid1) 
+            -> print_grid(NewGrid1),
+               write('\n\nEgalité !\n\n');
+            play_game(NewGrid1)
+            )
+        )
+    ;   write('Coup invalide, essayez de nouveau.\n'),
+        play_game(Grid)
+    ).
